@@ -1,6 +1,6 @@
 import { typeColors } from "@/lib/typeColors";
 
-export function TypePill({ type }: { type: string }) {
+export function TypeBadge({ type }: { type: string }) {
   const color = typeColors[type] ?? "bg-gray-300";
 
   return (

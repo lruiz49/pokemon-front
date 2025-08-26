@@ -16,4 +16,5 @@ export const typeColors: Record<string, string> = {
   rock: "bg-rock",
   steel: "bg-steel",
   water: "bg-water",
+  grass: "bg-grass",
 };
