@@ -1,13 +1,11 @@
 // src/pages/PokedexPage.tsx
 import { Link, useLoaderData } from "react-router-dom";
-import { PokeballIcon } from "./components/ui/PokeballIcon";
-import { FilterButton } from "./components/ui/filter";
-import { SearchBar } from "./components/ui/SearchBar";
-import { TypeBadge } from "./components/ui/TypeBadge";
-import { PokemonCard } from "./components/PokemonCard";
-import type { Pokemon } from "./PokemonDetails";
-import type { PokedexData } from "./pages/loaders/pokedexLoader";
-
+import type { PokedexData } from "./loaders/pokedexLoader";
+import { PokemonCard } from "../components/PokemonCard";
+import { FilterButton } from "../components/ui/filter";
+import { PokeballIcon } from "../components/ui/PokeballIcon";
+import { SearchBar } from "../components/ui/SearchBar";
+import { TypeBadge } from "../components/ui/TypeBadge";
 
 export default function PokedexPage() {
   const { items, page, totalPages } = useLoaderData() as PokedexData; 
@@ -36,8 +34,9 @@ export default function PokedexPage() {
               ))}
             </div>
 
+
             <div className="grid gap-6 [grid-template-columns:repeat(auto-fill,minmax(200px,1fr))]">
-              {items.map((p: Pokemon) => (
+              {items.map((p) => (
                 <Link key={p.id} to={`/pokemon/${p.id}`} prefetch="intent">
                   <PokemonCard id={p.id} name={p.name} imageUrl={p.imageUrl} />
                 </Link>
