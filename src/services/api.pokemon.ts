@@ -1,7 +1,7 @@
 import type { Pokemon } from "@/PokemonDetails";
 import { http } from "../lib/https";
 
-export type ListParams = { page?: number; limit?: number };
+export type ListParams = { page?: number; limit?: number, type?: string};
 
 export type BackendListResponse<T> = {
   data: T[];
@@ -14,12 +14,24 @@ export type BackendListResponse<T> = {
 };
 
 export async function listPokemon(params: ListParams = {}) {
-  const q = new URLSearchParams();
-  if (params.page) q.set("page", String(params.page));
-  if (params.limit) q.set("limit", String(params.limit));
+  const { page = 1, limit = 20, type } = params;
 
-  const qs = q.toString();
-  return http<BackendListResponse<Pokemon>>(`/pokemon${qs ? `?${qs}` : ""}`);
+  const qs = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  }).toString();
+
+  if (type && type.trim()) {
+    const t = type.toUpperCase();
+    return http<BackendListResponse<Pokemon>>(
+      `/pokemon/type/${encodeURIComponent(t)}?${qs}`
+    );
+  }
+
+  return http<BackendListResponse<Pokemon>>(`/pokemon?${qs}`);
+
 }
 
-export async function getPokemon(id: string) {}
+export async function getPokemon(id: string | number) {
+  return http<Pokemon>(`/pokemon/${encodeURIComponent(String(id))}`);
+}
