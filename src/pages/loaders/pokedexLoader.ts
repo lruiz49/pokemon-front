@@ -19,7 +19,6 @@ export async function pokedexLoader({ request }: LoaderFunctionArgs) {
   const type = url.searchParams.get("type") ?? undefined;
 
   const res = await listPokemon({ page, limit, type });
-  console.log("[pokedexLoader] first item:", res.data[0]);
   const data: PokedexData = {
     items: res.data,
     total: res.total,

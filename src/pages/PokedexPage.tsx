@@ -1,4 +1,3 @@
-// src/pages/PokedexPage.tsx
 import { Link, useLoaderData, useSearchParams } from "react-router-dom";
 import type { PokedexData } from "./loaders/pokedexLoader";
 import { PokemonCard } from "../components/PokemonCard";
@@ -6,13 +5,31 @@ import { FilterButton } from "../components/ui/filter";
 import { PokeballIcon } from "../components/ui/PokeballIcon";
 import { SearchBar } from "../components/ui/SearchBar";
 import { TypeBadge } from "../components/ui/TypeBadge";
+import { PageLimitDropdown } from "@/components/PageLimitDropown";
+import { useRef } from "react";
 
 export default function PokedexPage() {
   const { items, page, totalPages, hasNextPage, hasPreviousPage, limit } =
     useLoaderData() as PokedexData;
 
+  const scrollerRef = useRef<HTMLDivElement | null>(null);
+
   const [params, setParams] = useSearchParams();
   const activeType = (params.get("type") || "").toLowerCase();
+
+  function withViewTransition(run: () => void) {
+    const resetInnerScroll = () => scrollerRef.current && (scrollerRef.current.scrollTop = 0);
+
+    if (document.startViewTransition) {
+      document.startViewTransition(() => {
+        resetInnerScroll(); 
+        run();
+      });
+    } else {
+      resetInnerScroll();
+      run();
+    }
+  }
 
 
   function setTypeFilter(t: string | null) {
@@ -20,25 +37,56 @@ export default function PokedexPage() {
     if (t) next.set("type", t.toLowerCase());
     else next.delete("type");
     next.set("page", "1");
-    setParams(next);
+    withViewTransition(() => setParams(next));
   }
+
 
 
   function goToPage(p: number) {
     const target = Math.min(Math.max(1, p), Math.max(1, totalPages || 1));
     const next = new URLSearchParams(params);
     next.set("page", String(target));
-    // Ensure limit is stable in the URL (optional)
     if (limit) next.set("limit", String(limit));
-    setParams(next);
+    withViewTransition(() => setParams(next));
   }
 
-  const showNumbers = totalPages <= 7;
-  const pages = showNumbers ? Array.from({ length: totalPages }, (_, i) => i + 1) : [];
+  function getPages(current: number, total: number) {
+    const pages: (number | string)[] = [];
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    pages.push(1);
+    if (current > 3) {
+      pages.push("…");
+    }
+    const start = Math.max(2, current - 1);
+    const end = Math.min(total - 1, current + 1);
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    if (current < total - 2) {
+      pages.push("…");
+    }
+    pages.push(total);
+    return pages;
+  }
+
+  function setLimit(l: number) {
+    if (l === limit) return;
+
+
+    const next = new URLSearchParams(params);
+    next.set("page", "1");
+    next.set("limit", String(l));
+    withViewTransition(() => setParams(next));
+
+  }
+
+  const pages = getPages(page, totalPages);
 
   return (
-    <div className="min-h-dvh bg-neutral-100">
-      <div className="bg-pokedex text-white">
+    <div className="h-dvh bg-neutral-100 overflow-hidden flex flex-col">
+      <div className="bg-pokedex text-white [view-transition-name:none]">
         <div className="px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <PokeballIcon className="h-6 w-6 text-white" />
@@ -51,11 +99,17 @@ export default function PokedexPage() {
         </div>
       </div>
 
-      <main className="px-6">
-        <div className="text-xl font-semibold">
+      <main
+        ref={scrollerRef}
+        className="min-h-0 flex-1 overflow-y-auto px-6
+                 [scrollbar-gutter:stable_both-edges]
+                 [scrollbar-width:thin] [scrollbar-color:rgba(0,0,0,.25)_transparent]"
+        style={{ viewTransitionName: "pokedex-main" }}
+      >
+
+        <div className="text-xl font-semibold ">
           <h1>
             <div className="grid pt-4 pb-6 gap-2 [grid-template-columns:repeat(auto-fill,minmax(95px,1fr))]">
-              {/* All pill to clear filter */}
               <TypeBadge
                 type="all"
                 onClick={() => setTypeFilter(null)}
@@ -63,7 +117,6 @@ export default function PokedexPage() {
                   !activeType
                     ? "opacity-100 ring-2 ring-black/20"
                     : "opacity-35 hover:opacity-80",
-                  // subtle neutral background for "all"
                   "!bg-neutral-500",
                 ].join(" ")}
               />
@@ -98,39 +151,40 @@ export default function PokedexPage() {
                 </Link>
               ))}
             </div>
-            {/* Pager */}
             <div className="flex items-center justify-center gap-2 py-8">
+              <PageLimitDropdown limit={limit} setLimit={setLimit} />
+
               <button
-                className="px-3 py-1 border rounded disabled:opacity-50"
+                className="px-2 py-0.5 text-sm text-gray-600 hover:text-black disabled:text-gray-300"
                 onClick={() => goToPage(page - 1)}
                 disabled={!hasPreviousPage}
               >
                 ← Prev
               </button>
 
-              {showNumbers ? (
-                <div className="flex items-center gap-1">
-                  {pages.map((n) => (
+              <div className="flex items-center gap-2 text-sm">
+                {pages.map((n, i) =>
+                  typeof n === "number" ? (
                     <button
-                      key={n}
+                      key={i}
                       onClick={() => goToPage(n)}
-                      className={[
-                        "px-3 py-1 border rounded",
-                        n === page ? "bg-neutral-900 text-white" : "hover:bg-neutral-100",
-                      ].join(" ")}
+                      aria-current={n === page ? "page" : undefined}
+                      className={
+                        n === page
+                          ? "font-semibold text-black underline underline-offset-4"
+                          : "text-gray-500 hover:text-black"
+                      }
                     >
                       {n}
                     </button>
-                  ))}
-                </div>
-              ) : (
-                <span className="text-sm text-neutral-600">
-                  Page {page} / {totalPages}
-                </span>
-              )}
+                  ) : (
+                    <span key={i} className="text-gray-400 select-none">…</span>
+                  )
+                )}
+              </div>
 
               <button
-                className="px-3 py-1 border rounded disabled:opacity-50"
+                className="px-2 py-0.5 text-sm text-gray-600 hover:text-black disabled:text-gray-300"
                 onClick={() => goToPage(page + 1)}
                 disabled={!hasNextPage}
               >

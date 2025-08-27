@@ -1,4 +1,3 @@
-// src/pages/PokemonDetails.tsx  (must be .tsx)
 import { Link, useLoaderData } from "react-router-dom";
 import { typeColors } from "./lib/typeColors";
 import { getPokemon } from "./services/api.pokemon";

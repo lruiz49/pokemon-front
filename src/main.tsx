@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import App from "./app/app";
-import PokedexPage from "./pages/PokedexPage"; // ensure this exists and default-exports a component
+import PokedexPage from "./pages/PokedexPage"; 
 import "./index.css";
 import { pokedexLoader } from "./pages/loaders/pokedexLoader";
 import RootError from "./app/RoorError";

@@ -17,9 +17,7 @@ export class HttpError extends Error {
 
 export async function http<T>(path: string, init?: RequestInit): Promise<T> {
 
-    // src/lib/http.ts (or https.ts in your case)
-    console.log("API_BASE =", API_BASE);
-
+    
     if (!API_BASE) {
         throw new Error("VITE_API_URL is not set. Add it to .env");
     }
